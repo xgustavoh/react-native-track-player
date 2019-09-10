@@ -197,7 +197,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
         service.emit(MusicEvents.PLAYBACK_QUEUE_ENDED, bundle);
     }
 
-    public void onMetadataReceived(String source, String title, String url, String artist, String album, String date, String genre) {
+    public void onMetadataReceived(String source, String title, String url, String artist, String album, String date, String genre, Bundle extra) {
         Log.d(Utils.LOG, "onMetadataReceived: " + source);
 
         Bundle bundle = new Bundle();
@@ -208,6 +208,9 @@ public class MusicManager implements OnAudioFocusChangeListener {
         bundle.putString("album", album);
         bundle.putString("date", date);
         bundle.putString("genre", genre);
+        if(id3 != null) {
+            bundle.putBundle("extra", extra);
+        }
         service.emit(MusicEvents.PLAYBACK_METADATA, bundle);
     }
 
