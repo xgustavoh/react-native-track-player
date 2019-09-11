@@ -208,7 +208,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
         bundle.putString("album", album);
         bundle.putString("date", date);
         bundle.putString("genre", genre);
-        if(id3 != null) {
+        if(extra != null) {
             bundle.putBundle("extra", extra);
         }
         service.emit(MusicEvents.PLAYBACK_METADATA, bundle);
