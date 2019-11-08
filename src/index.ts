@@ -15,8 +15,12 @@ function resolveImportedPath(path?: number | string) {
 
 // MARK: - General API
 
-function isServiceRunning(): Promise<boolean> {
-  return TrackPlayer.isServiceRunning()
+async function isServiceRunning(): Promise<boolean> {
+  if (Platform.OS === 'android') {
+    return TrackPlayer.isServiceRunning()
+  } else {
+    return new Promise((resolve, reject) => reject())
+  }
 }
 
 async function setupPlayer(options: PlayerOptions = {}): Promise<void> {
