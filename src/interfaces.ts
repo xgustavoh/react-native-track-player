@@ -87,6 +87,7 @@ export interface MetadataOptions {
   dislikeOptions?: FeedbackOptions
   bookmarkOptions?: FeedbackOptions
   stopWithApp?: boolean
+  alwaysPauseOnInterruption?: boolean
 
   capabilities?: Capability[]
   notificationCapabilities?: Capability[]
