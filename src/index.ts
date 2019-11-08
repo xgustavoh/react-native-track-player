@@ -15,6 +15,10 @@ function resolveImportedPath(path?: number | string) {
 
 // MARK: - General API
 
+function isServiceRunning(): Promise<boolean> {
+  return TrackPlayer.isServiceRunning()
+}
+
 async function setupPlayer(options: PlayerOptions = {}): Promise<void> {
   return TrackPlayer.setupPlayer(options || {})
 }
@@ -180,6 +184,7 @@ export * from './interfaces'
 
 export default {
   // MARK: - General API
+  isServiceRunning,
   setupPlayer,
   destroy,
   updateOptions,

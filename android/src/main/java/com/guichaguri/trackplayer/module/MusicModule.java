@@ -152,6 +152,11 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
     }
 
     @ReactMethod
+    public void isServiceRunning(final Promise promise) {
+        promise.resolve(binder != null);
+    }
+
+    @ReactMethod
     public void setupPlayer(ReadableMap data, final Promise promise) {
         final Bundle options = Arguments.toBundle(data);
 
