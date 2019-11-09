@@ -1,7 +1,7 @@
 package com.guichaguri.trackplayer.service;
 
-import android.app.NotificationChannel;
 import android.content.Intent;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +10,8 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media.session.MediaButtonReceiver;
