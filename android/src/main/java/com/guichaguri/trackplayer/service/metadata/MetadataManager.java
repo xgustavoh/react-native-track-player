@@ -53,16 +53,9 @@ public class MetadataManager {
         this.service = service;
         this.manager = manager;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(Utils.NOTIFICATION_CHANNEL, "Playback", NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setShowBadge(false);
-            channel.setSound(null, null);
+        String channel = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? Utils.NOTIFICATION_CHANNEL : null;
 
-            NotificationManager not = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
-            not.createNotificationChannel(channel);
-        }
-
-        this.builder = new NotificationCompat.Builder(service, Utils.NOTIFICATION_CHANNEL);
+        this.builder = new NotificationCompat.Builder(service, channel);
         this.session = new MediaSessionCompat(service, "TrackPlayer", null, null);
 
         session.setFlags(MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
@@ -79,7 +72,7 @@ public class MetadataManager {
         openApp.setAction(Intent.ACTION_VIEW);
         openApp.setData(Uri.parse("trackplayer://notification.click"));
 
-        builder.setContentIntent(PendingIntent.getActivity(context, 0, openApp, PendingIntent.FLAG_CANCEL_CURRENT));
+        builder.setContentIntent(PendingIntent.getActivity(context, Utils.NOTIFICATION_ID, openApp, PendingIntent.FLAG_CANCEL_CURRENT));
 
         builder.setSmallIcon(R.drawable.play);
         builder.setCategory(NotificationCompat.CATEGORY_TRANSPORT);
@@ -150,7 +143,7 @@ public class MetadataManager {
         ratingType = options.getInt("ratingType", RatingCompat.RATING_NONE);
         session.setRatingType(ratingType);
 
-        updateNotification();
+        updateNotification(session.isActive());
     }
 
     public int getRatingType() {
@@ -182,7 +175,7 @@ public class MetadataManager {
         builder.setLargeIcon(bitmap);
 
         session.setMetadata(metadata.build());
-        updateNotification();
+        updateNotification(session.isActive());
     }
 
     /**
@@ -205,7 +198,7 @@ public class MetadataManager {
                             builder.setLargeIcon(resource);
 
                             session.setMetadata(metadata.build());
-                            updateNotification();
+                            updateNotification(session.isActive());
                             artworkTarget = null;
                         }
                     });
@@ -216,7 +209,7 @@ public class MetadataManager {
         builder.setSubText(track.album);
 
         session.setMetadata(metadata.build());
-        updateNotification();
+        updateNotification(session.isActive());
     }
 
     /**
@@ -281,13 +274,12 @@ public class MetadataManager {
         pb.setBufferedPosition(playback.getBufferedPosition());
 
         session.setPlaybackState(pb.build());
-        updateNotification();
+        updateNotification(session.isActive());
     }
 
     public void setActive(boolean active) {
-        this.session.setActive(active);
-
-        updateNotification();
+        updateNotification(active);
+        session.setActive(active);
     }
 
     public void destroy() {
@@ -297,10 +289,14 @@ public class MetadataManager {
         session.release();
     }
 
-    private void updateNotification() {
-        if(session.isActive()) {
-            service.startForeground(1, builder.build());
-        } else {
+    private void updateNotification(boolean active) {
+        if(!session.isActive() && active) {
+            service.startForeground(Utils.NOTIFICATION_ID, builder.build());
+        } else if(session.isActive() && active) {
+            Context context = service.getApplicationContext();
+            NotificationManager not = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            not.notify(Utils.NOTIFICATION_ID, builder.build());
+        } else if(session.isActive() && !active) {
             service.stopForeground(true);
         }
     }

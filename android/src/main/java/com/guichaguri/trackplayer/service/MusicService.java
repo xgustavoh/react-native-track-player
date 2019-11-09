@@ -79,14 +79,10 @@ public class MusicService extends HeadlessJsTaskService {
 
             // Checks whether there is a React activity
             if(reactContext == null || !reactContext.hasCurrentActivity()) {
-                String channel = null;
-
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    channel = NotificationChannel.DEFAULT_CHANNEL_ID;
-                }
+                String channel = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? Utils.NOTIFICATION_CHANNEL : null;
 
                 // Sets the service to foreground with an empty notification
-                startForeground(1, new NotificationCompat.Builder(this, channel).build());
+                startForeground(Utils.NOTIFICATION_ID, new NotificationCompat.Builder(this, channel).build());
                 // Stops the service right after
                 stopSelf();
             }
@@ -96,6 +92,16 @@ public class MusicService extends HeadlessJsTaskService {
     @Override
     public void onCreate(){
         super.onCreate();
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(Utils.NOTIFICATION_CHANNEL, "Playback", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription(Utils.SERVICE_NAME);
+            channel.setShowBadge(false);
+            channel.setSound(null, null);
+
+            NotificationManager not = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            not.createNotificationChannel(channel);
+        }
 
         this.createWifiLock();
         this.newWakeLock();
