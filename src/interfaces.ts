@@ -88,6 +88,7 @@ export interface MetadataOptions {
   bookmarkOptions?: FeedbackOptions
   stopWithApp?: boolean
   alwaysPauseOnInterruption?: boolean
+  duckingVolumeMultiplier?: number
 
   capabilities?: Capability[]
   notificationCapabilities?: Capability[]
