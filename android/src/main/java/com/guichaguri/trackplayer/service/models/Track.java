@@ -211,19 +211,31 @@ public class Track {
 
         switch(type) {
             case DASH:
-                return new DashMediaSource.Factory(new DefaultDashChunkSource.Factory(ds), ds)
-                        .createMediaSource(uri);
+                return createDashSource(ds);
             case HLS:
-                return new HlsMediaSource.Factory(ds)
-                        .createMediaSource(uri);
+                return createHlsSource(ds);
             case SMOOTH_STREAMING:
-                return new SsMediaSource.Factory(new DefaultSsChunkSource.Factory(ds), ds)
-                        .createMediaSource(uri);
+                return createSsSource(ds);
             default:
                 return new ProgressiveMediaSource.Factory(ds, new DefaultExtractorsFactory()
                         .setConstantBitrateSeekingEnabled(true))
                         .createMediaSource(uri);
         }
+    }
+
+    private MediaSource createDashSource(DataSource.Factory factory) {
+        return new DashMediaSource.Factory(new DefaultDashChunkSource.Factory(factory), factory)
+                .createMediaSource(uri);
+    }
+
+    private MediaSource createHlsSource(DataSource.Factory factory) {
+        return new HlsMediaSource.Factory(factory)
+                .createMediaSource(uri);
+    }
+
+    private MediaSource createSsSource(DataSource.Factory factory) {
+        return new SsMediaSource.Factory(new DefaultSsChunkSource.Factory(factory), factory)
+                .createMediaSource(uri);
     }
 
     // Check update on connection (HTTP)
@@ -237,10 +249,12 @@ public class Track {
         }
         return !this.headers.equals(track.headers);
     }
+    
     public boolean updated(Track track) {
         return  !this.uri.equals(track.uri)
                 || !this.type.equals(track.type)
                 || checkHeaders(track)
                 || this.resourceId != track.resourceId;
-    }      
+    }
+
 }
