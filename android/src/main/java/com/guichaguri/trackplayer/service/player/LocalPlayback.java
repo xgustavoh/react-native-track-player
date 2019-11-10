@@ -19,6 +19,7 @@ import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 import com.guichaguri.trackplayer.service.MusicManager;
 import com.guichaguri.trackplayer.service.Utils;
 import com.guichaguri.trackplayer.service.models.Track;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,6 +92,58 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         source.addMediaSources(index, trackList, manager.getHandler(), Utils.toRunnable(promise));
 
         prepare();
+    }
+
+    private void updateRecursive(int pos, List<Track> update, List<Integer> updateIndex, @Nullable Runnable actionOnCompletion) {
+        if (pos < update.size()) {
+            final Track track = update.get(pos);
+            final int updatePos = updateIndex.get(pos);
+            final MediaSource trackSource = track.toMediaSource(context, this);
+
+            queue.set(updatePos, track);
+            source.addMediaSource(updatePos + 1, trackSource, manager.getHandler(), () -> {
+                source.removeMediaSource(updatePos, manager.getHandler(), () -> {
+                    updateRecursive(pos + 1, update, updateIndex, actionOnCompletion);
+                });
+            });
+        } else if (actionOnCompletion != null) {
+            actionOnCompletion.run();
+        }
+    }
+
+    @Override
+    public void update(List<Track> update, List<Integer> updateIndex, Promise promise) {
+        if (update.size() > 0) {
+            final int position = player.getCurrentWindowIndex();
+            final boolean isCurrent = updateIndex.contains(position);
+            updateRecursive(0, update, updateIndex, () -> {
+                if(isCurrent && position != C.INDEX_UNSET) {
+                    lastKnownWindow = player.getCurrentWindowIndex();
+                    lastKnownPosition = player.getCurrentPosition();
+                    player.seekToDefaultPosition(position);
+                    prepare();
+                }
+                promise.resolve(null);
+            });
+        } else {
+            promise.resolve(null);
+        }
+    }
+
+    @Override
+    public void addOrUpdate(Collection<Track> insert, int index, List<Track> update, List<Integer> updateIndex, Promise promise) {
+        if (insert.size() > 0) {
+            List<MediaSource> trackList = new ArrayList<>();
+            for(Track track : insert) {
+                trackList.add(track.toMediaSource(context, this));
+            }
+            queue.addAll(index, insert);
+            source.addMediaSources(index, trackList, manager.getHandler(), () -> update(update, updateIndex, promise));
+        } else if (update.size() > 0) {
+            update(update, updateIndex, promise);
+        } else {
+            promise.resolve(null);
+        }
     }
 
     @Override

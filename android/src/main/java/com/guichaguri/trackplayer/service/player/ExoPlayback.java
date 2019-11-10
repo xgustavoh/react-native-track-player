@@ -19,6 +19,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.guichaguri.trackplayer.service.MusicManager;
 import com.guichaguri.trackplayer.service.Utils;
 import com.guichaguri.trackplayer.service.models.Track;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,6 +62,10 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     public abstract void add(Track track, int index, Promise promise);
 
     public abstract void add(Collection<Track> tracks, int index, Promise promise);
+
+    public abstract void update(List<Track> update, List<Integer> updateIndex, Promise promise);
+
+    public abstract void addOrUpdate(Collection<Track> insert, int index, List<Track> update, List<Integer> updateIndex, Promise promise);
 
     public abstract void remove(List<Integer> indexes, Promise promise);
 

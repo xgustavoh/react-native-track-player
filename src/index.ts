@@ -87,6 +87,28 @@ async function add(tracks: Track | Track[], insertBeforeId?: string): Promise<vo
   return TrackPlayer.add(tracks, insertBeforeId)
 }
 
+async function addOrUpdate(tracks: Track | Track[], insertBeforeId?: string): Promise<void> {
+  if (!Array.isArray(tracks)) {
+    tracks = [tracks]
+  }
+
+  if (tracks.length < 1) return
+
+  for (let i = 0; i < tracks.length; i++) {
+    // Clone the object before modifying it
+    tracks[i] = { ...tracks[i] }
+
+    // Resolve the URLs
+    tracks[i].url = resolveImportedPath(tracks[i].url)
+    tracks[i].artwork = resolveImportedPath(tracks[i].artwork)
+
+    // Cast ID's into strings
+    tracks[i].id = `${tracks[i].id}`
+  }
+
+  return TrackPlayer.addOrUpdate(tracks, insertBeforeId)
+}
+
 async function remove(tracks: Track | Track[]): Promise<void> {
   if (!Array.isArray(tracks)) {
     tracks = [tracks]
@@ -197,6 +219,7 @@ export default {
 
   // MARK: - Queue API
   add,
+  addOrUpdate,
   remove,
   removeUpcomingTracks,
   skip,

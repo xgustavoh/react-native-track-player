@@ -225,4 +225,22 @@ public class Track {
                         .createMediaSource(uri);
         }
     }
+
+    // Check update on connection (HTTP)
+    private boolean checkHeaders(Track track) {
+        if(this.headers == null && track.headers == null) {
+            return false;
+        }
+        if( (this.headers == null && track.headers != null) ||
+            (this.headers != null && track.headers == null)) {
+            return true;
+        }
+        return !this.headers.equals(track.headers);
+    }
+    public boolean updated(Track track) {
+        return  !this.uri.equals(track.uri)
+                || !this.type.equals(track.type)
+                || checkHeaders(track)
+                || this.resourceId != track.resourceId;
+    }      
 }

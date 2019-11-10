@@ -229,6 +229,63 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
             }
         });
     }
+    
+    @ReactMethod
+    public void addOrUpdate(ReadableArray tracks, final String insertBeforeId, final Promise callback) {
+        final ArrayList bundleList = Arguments.toList(tracks);
+
+        waitForConnection(() -> {
+            List<Track> trackList;
+
+            try {
+                trackList = Track.createTracks(getReactApplicationContext(), bundleList, binder.getRatingType());
+            } catch(Exception ex) {
+                callback.reject("invalid_track_object", ex);
+                return;
+            }
+
+            if (trackList == null || trackList.isEmpty()) {
+                callback.reject("invalid_track_object", "Track is missing a required key");
+                return;
+            }
+
+            List<Track> insert = new ArrayList<>();
+            List<Track> update = new ArrayList<>();
+            List<Integer> updateIndex = new ArrayList<>();
+
+            List<Track> queue = binder.getPlayback().getQueue();
+            int index = queue.size();
+
+            for(int m = trackList.size() - 1; m >= 0; m--) {
+                int i = 0;
+                while(i < queue.size() && !trackList.get(m).id.equals(queue.get(i).id)) {
+                    i++;
+                }
+
+                if (i < queue.size()) {
+                    if (queue.get(i).updated(trackList.get(m))) {
+                        update.add(trackList.get(m));
+                        updateIndex.add(i);
+                    }
+                    trackList.remove(m);
+                } else {
+                    insert.add(0, trackList.get(m));
+                    trackList.remove(m);
+                }
+            }
+
+            if(insertBeforeId != null) {                
+                for(int i = 0; i < queue.size(); i++) {
+                    if(queue.get(i).id.equals(insertBeforeId)) {
+                        index = i;
+                        break;
+                    }
+                }
+            }
+
+            binder.getPlayback().addOrUpdate(insert, index, update, updateIndex, callback);
+        });
+    }
 
     @ReactMethod
     public void remove(ReadableArray tracks, final Promise callback) {
