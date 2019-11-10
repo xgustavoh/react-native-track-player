@@ -150,7 +150,9 @@ public class MusicService extends HeadlessJsTaskService {
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
 
-        if (manager == null || manager.shouldStopWithApp()) {
+        if (manager == null || manager.shouldStopWithApp()) {            
+            manager.getPlayback().stop();
+            onDestroy();
             stopSelf();
         }
     }
