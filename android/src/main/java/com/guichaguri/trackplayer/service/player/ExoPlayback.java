@@ -38,8 +38,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     protected List<Track> queue = Collections.synchronizedList(new ArrayList<>());
 
     // https://github.com/google/ExoPlayer/issues/2728
-    protected int lastKnownWindow = C.INDEX_UNSET;
-    protected long lastKnownPosition = C.POSITION_UNSET;
+    protected int startWindow = C.INDEX_UNSET;
+    protected long startPosition = C.POSITION_UNSET;
     protected int previousState = PlaybackStateCompat.STATE_NONE;
     protected float volumeMultiplier = 1.0F;
 
@@ -94,8 +94,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
         for(int i = 0; i < queue.size(); i++) {
             if(id.equals(queue.get(i).id)) {
-                lastKnownWindow = player.getCurrentWindowIndex();
-                lastKnownPosition = player.getCurrentPosition();
+                startWindow = player.getCurrentWindowIndex();
+                startPosition = player.getCurrentPosition();
 
                 player.seekToDefaultPosition(i);
                 promise.resolve(null);
@@ -114,8 +114,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             return;
         }
 
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        startWindow = player.getCurrentWindowIndex();
+        startPosition = player.getCurrentPosition();
 
         player.seekToDefaultPosition(prev);
         promise.resolve(null);
@@ -129,8 +129,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             return;
         }
 
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        startWindow = player.getCurrentWindowIndex();
+        startPosition = player.getCurrentPosition();
 
         player.seekToDefaultPosition(next);
         promise.resolve(null);
@@ -145,17 +145,17 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void stop() {
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        startWindow = player.getCurrentWindowIndex();
+        startPosition = player.getCurrentPosition();
 
         player.stop(false);
         player.setPlayWhenReady(false);
-        player.seekTo(lastKnownWindow,0);
+        player.seekTo(startWindow,0);
     }
 
     public void reset() {
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        startWindow = player.getCurrentWindowIndex();
+        startPosition = player.getCurrentPosition();
 
         player.stop(true);
         player.setPlayWhenReady(false);
@@ -186,8 +186,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void seekTo(long time) {
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        startWindow = player.getCurrentWindowIndex();
+        startPosition = player.getCurrentPosition();
 
         player.seekTo(time);
     }
@@ -248,23 +248,23 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     public void onPositionDiscontinuity(int reason) {
         Log.d(Utils.LOG, "onPositionDiscontinuity: " + reason);
 
-        if(lastKnownWindow != player.getCurrentWindowIndex()) {
-            Track previous = lastKnownWindow == C.INDEX_UNSET || lastKnownWindow >= queue.size() ? null : queue.get(lastKnownWindow);
+        if(startWindow != player.getCurrentWindowIndex()) {
+            Track previous = startWindow == C.INDEX_UNSET || startWindow >= queue.size() ? null : queue.get(startWindow);
             Track next = getCurrentTrack();
 
             // Track changed because it ended
             // We'll use its duration instead of the last known position
-            if (reason == Player.DISCONTINUITY_REASON_PERIOD_TRANSITION && lastKnownWindow != C.INDEX_UNSET) {
-                if (lastKnownWindow >= player.getCurrentTimeline().getWindowCount()) return;
-                long duration = player.getCurrentTimeline().getWindow(lastKnownWindow, new Window()).getDurationMs();
-                if(duration != C.TIME_UNSET) lastKnownPosition = duration;
+            if (reason == Player.DISCONTINUITY_REASON_PERIOD_TRANSITION && startWindow != C.INDEX_UNSET) {
+                if (startWindow >= player.getCurrentTimeline().getWindowCount()) return;
+                long duration = player.getCurrentTimeline().getWindow(startWindow, new Window()).getDurationMs();
+                if(duration != C.TIME_UNSET) startPosition = duration;
             }
 
-            manager.onTrackUpdate(previous, lastKnownPosition, next);
+            manager.onTrackUpdate(previous, startPosition, next);
         }
 
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        startWindow = player.getCurrentWindowIndex();
+        startPosition = player.getCurrentPosition();
     }
 
     @Override

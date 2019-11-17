@@ -118,8 +118,8 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             final boolean isCurrent = updateIndex.contains(position);
             updateRecursive(0, update, updateIndex, () -> {
                 if(isCurrent && position != C.INDEX_UNSET) {
-                    lastKnownWindow = player.getCurrentWindowIndex();
-                    lastKnownPosition = player.getCurrentPosition();
+                    startWindow = player.getCurrentWindowIndex();
+                    startPosition = player.getCurrentPosition();
                     player.seekToDefaultPosition(position);
                     prepare();
                 }
@@ -191,8 +191,8 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         player.prepare(source, true, true);
         prepared = false; // We set it to false as the queue is now empty
 
-        lastKnownWindow = C.INDEX_UNSET;
-        lastKnownPosition = C.POSITION_UNSET;
+        startWindow = C.INDEX_UNSET;
+        startPosition = C.POSITION_UNSET;
 
         manager.onReset();
     }
