@@ -69,7 +69,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             Log.d(Utils.LOG, "Preparing the media source...");
             boolean haveStartPosition = startWindow != C.INDEX_UNSET;
             if (haveStartPosition) {
-                player.seekTo(startWindow, startPosition);
+                player.seekToDefaultPosition(startWindow);
             }
             player.prepare(source, !haveStartPosition, false);
             prepared = true;
@@ -81,8 +81,13 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         queue.add(index, track);
         MediaSource trackSource = track.toMediaSource(context, this);
         source.addMediaSource(index, trackSource, manager.getHandler(), Utils.toRunnable(promise));
-
-        prepare();
+        if(!startAutoPlay) {
+            player.setPlayWhenReady(false);
+            player.stop(false);
+        } else {
+            prepared = false;
+            prepare();
+        }
     }
 
     @Override
@@ -95,8 +100,13 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
         queue.addAll(index, tracks);
         source.addMediaSources(index, trackList, manager.getHandler(), Utils.toRunnable(promise));
-
-        prepare();
+        if(!startAutoPlay) {
+            player.setPlayWhenReady(false);
+            player.stop(false);
+        } else {
+            prepared = false;
+            prepare();
+        }
     }
 
     private void updateRecursive(int pos, List<Track> update, List<Integer> updateIndex, @Nullable Runnable actionOnCompletion) {
@@ -118,18 +128,31 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
     @Override
     public void update(List<Track> update, List<Integer> updateIndex, Promise promise) {
+        final int position = player.getCurrentWindowIndex();
         if (update.size() > 0) {
-            final int position = player.getCurrentWindowIndex();
             final boolean isCurrent = updateIndex.contains(position);
             updateRecursive(0, update, updateIndex, () -> {
                 if(isCurrent && position != C.INDEX_UNSET) {
-                    updateStartPosition();
-                    player.seekToDefaultPosition(position);
-                    prepare();
+                    clearStartPosition(player.getPlayWhenReady());
+                    startWindow = position;
+                    if(!startAutoPlay) {
+                        player.setPlayWhenReady(false);
+                        player.stop(false);
+                    } else {
+                        prepared = false;
+                        prepare();
+                    }
                 }
                 promise.resolve(null);
             });
         } else {
+            if(!startAutoPlay) {
+                player.setPlayWhenReady(false);
+                player.stop(false);
+            } else {
+                prepared = false;
+                prepare();
+            }
             promise.resolve(null);
         }
     }
@@ -195,7 +218,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         player.prepare(source, true, true);
         prepared = false; // We set it to false as the queue is now empty
 
-        clearStartPosition();
+        clearStartPosition(false);
         manager.onReset();
     }
 
@@ -207,19 +230,18 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
     @Override
     public void stop() {
+        final int current = player.getCurrentWindowIndex();
         super.stop();
-
-        final int position = player.getCurrentWindowIndex();
+        startWindow = current;
         source = new ConcatenatingMediaSource();
-        player.prepare(source, true, true);        
+        player.prepare(source, true, true);
         List<MediaSource> trackList = new ArrayList<>();
         for(Track track : queue) {
             trackList.add(track.toMediaSource(context, this));
         }
         source.addMediaSources(0, trackList, manager.getHandler(), () -> {
-            if(position != C.INDEX_UNSET) {
-                player.seekToDefaultPosition(position);
-            }
+            player.setPlayWhenReady(false);
+            player.stop(false);
             prepared = false;
         });
     }
@@ -279,7 +301,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         prepared = false;
         super.onPlayerError(error);
         if (isBehindLiveWindow(error)) {
-            clearStartPosition();
+            clearStartPosition(true);
             prepare();
         }
     }

@@ -140,18 +140,18 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void stop() {
-        clearStartPosition();
+        clearStartPosition(false);
 
-        player.stop(false);
-        player.setPlayWhenReady(false);
         player.seekToDefaultPosition();
+        player.setPlayWhenReady(false);
+        player.stop(true);
     }
 
     public void reset() {
-        clearStartPosition();
+        clearStartPosition(false);
 
-        player.stop(true);
         player.setPlayWhenReady(false);
+        player.stop(true);
     }
 
     public boolean isRemote() {
@@ -428,8 +428,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     // Resets/Clear the current position of the player.
-    protected void clearStartPosition() {
-        startAutoPlay = true;
+    protected void clearStartPosition(boolean autoPlay) {
+        startAutoPlay = autoPlay;
         startWindow = C.INDEX_UNSET;
         startPosition = C.TIME_UNSET;
     }
