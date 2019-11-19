@@ -82,9 +82,23 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             manager.getMetadata().updateMetadata(track);
     }
 
+    public Track getTrack(int index) {
+        return index == C.INDEX_UNSET || index < 0 || index >= queue.size() ? null : queue.get(index);
+    }
+
+    public Track getPreviousTrack() {
+        int index = player.getPreviousWindowIndex();
+        return index == C.INDEX_UNSET || index < 0 || index >= queue.size() ? null : queue.get(index);
+    }
+
     public Track getCurrentTrack() {
         int index = player.getCurrentWindowIndex();
-        return index < 0 || index >= queue.size() ? null : queue.get(index);
+        return index == C.INDEX_UNSET || index < 0 || index >= queue.size() ? null : queue.get(index);
+    }
+
+    public Track getNextTrack() {
+        int index = player.getNextWindowIndex();
+        return index == C.INDEX_UNSET || index < 0 || index >= queue.size() ? null : queue.get(index);
     }
 
     public void skip(String id, Promise promise) {
@@ -159,7 +173,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public long getPosition() {
-        return player.getCurrentPosition();
+        return Math.max(0, player.getContentPosition());
     }
 
     public long getBufferedPosition() {

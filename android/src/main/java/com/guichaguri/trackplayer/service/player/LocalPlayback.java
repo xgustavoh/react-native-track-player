@@ -135,6 +135,8 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
                 if(isCurrent && position != C.INDEX_UNSET) {
                     clearStartPosition(player.getPlayWhenReady());
                     startWindow = position;
+                    // manager.onTrackUpdate(null, getPosition(), getTrack(position));
+
                     if(!startAutoPlay) {
                         player.setPlayWhenReady(false);
                         player.stop(false);
@@ -255,7 +257,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
     @Override
     public void reset() {
         Track track = getCurrentTrack();
-        long position = player.getCurrentPosition();
+        long position = getPosition();
 
         super.reset();
         resetQueue();
