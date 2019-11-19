@@ -38,6 +38,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     protected List<Track> queue = Collections.synchronizedList(new ArrayList<>());
 
     // https://github.com/google/ExoPlayer/issues/2728
+    protected boolean startAutoPlay = false;
     protected int startWindow = C.INDEX_UNSET;
     protected long startPosition = C.POSITION_UNSET;
     protected int previousState = PlaybackStateCompat.STATE_NONE;
@@ -94,9 +95,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
         for(int i = 0; i < queue.size(); i++) {
             if(id.equals(queue.get(i).id)) {
-                startWindow = player.getCurrentWindowIndex();
-                startPosition = player.getCurrentPosition();
-
+                updateStartPosition();
                 player.seekToDefaultPosition(i);
                 promise.resolve(null);
                 return;
@@ -114,9 +113,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             return;
         }
 
-        startWindow = player.getCurrentWindowIndex();
-        startPosition = player.getCurrentPosition();
-
+        updateStartPosition();
         player.seekToDefaultPosition(prev);
         promise.resolve(null);
     }
@@ -129,9 +126,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             return;
         }
 
-        startWindow = player.getCurrentWindowIndex();
-        startPosition = player.getCurrentPosition();
-
+        updateStartPosition();
         player.seekToDefaultPosition(next);
         promise.resolve(null);
     }
@@ -145,17 +140,15 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void stop() {
-        startWindow = player.getCurrentWindowIndex();
-        startPosition = player.getCurrentPosition();
+        clearStartPosition();
 
         player.stop(false);
         player.setPlayWhenReady(false);
-        player.seekTo(startWindow,0);
+        player.seekToDefaultPosition();
     }
 
     public void reset() {
-        startWindow = player.getCurrentWindowIndex();
-        startPosition = player.getCurrentPosition();
+        clearStartPosition();
 
         player.stop(true);
         player.setPlayWhenReady(false);
@@ -186,9 +179,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void seekTo(long time) {
-        startWindow = player.getCurrentWindowIndex();
-        startPosition = player.getCurrentPosition();
-
+        updateStartPosition();
         player.seekTo(time);
     }
 
@@ -263,8 +254,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             manager.onTrackUpdate(previous, startPosition, next);
         }
 
-        startWindow = player.getCurrentWindowIndex();
-        startPosition = player.getCurrentPosition();
+        updateStartPosition();
     }
 
     @Override
@@ -426,5 +416,21 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     public void onMetadata(Metadata metadata) {
         handleId3Metadata(metadata);
         handleIcyMetadata(metadata);
+    }
+
+    // Updates the current position of the player.
+    protected void updateStartPosition() {
+        if (player != null) {
+            startAutoPlay = player.getPlayWhenReady();
+            startWindow = player.getCurrentWindowIndex();
+            startPosition = Math.max(0, player.getContentPosition());
+        }
+    }
+
+    // Resets/Clear the current position of the player.
+    protected void clearStartPosition() {
+        startAutoPlay = true;
+        startWindow = C.INDEX_UNSET;
+        startPosition = C.TIME_UNSET;
     }
 }
