@@ -52,7 +52,6 @@ public class MusicBinder extends Binder {
 
     public void destroy() {
         service.destroy();
-        service.stopSelf();
     }
 
 }

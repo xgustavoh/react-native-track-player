@@ -310,6 +310,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
     @Override
     public void destroy() {
+        reset();
         super.destroy();
 
         if(cache != null) {

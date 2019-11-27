@@ -331,7 +331,9 @@ public class MusicManager implements OnAudioFocusChangeListener {
         }
 
         // Release the playback resources
-        if(playback != null) playback.destroy();
+        if(playback != null) {
+            playback.destroy();
+        }
 
         // Release the metadata resources
         metadata.destroy();

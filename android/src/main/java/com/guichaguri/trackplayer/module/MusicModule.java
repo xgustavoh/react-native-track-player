@@ -103,8 +103,8 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
 
         // Binds the service to get a MediaWrapper instance
         Intent intent = new Intent(context, MusicService.class);
-        context.startService(intent);
         intent.setAction(Utils.CONNECT_INTENT);
+        context.startService(intent);
         context.bindService(intent, this, 0);
 
         connecting = true;
