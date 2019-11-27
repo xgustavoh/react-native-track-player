@@ -18,6 +18,7 @@ import android.annotation.SuppressLint;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media.session.MediaButtonReceiver;
+import android.support.v4.media.session.MediaSessionCompat;
 
 import com.guichaguri.trackplayer.R;
 import com.facebook.react.HeadlessJsTaskService;
@@ -43,11 +44,13 @@ public class MusicService extends HeadlessJsTaskService {
     @Nullable
     @Override
     protected HeadlessJsTaskConfig getTaskConfig(Intent intent) {
+        Log.d(Utils.LOG, "[MusicService] getTaskConfig()");
         return new HeadlessJsTaskConfig("TrackPlayer", Arguments.createMap(), 0, true);
     }
 
     @Override
     public void onHeadlessJsTaskFinish(int taskId) {
+        Log.d(Utils.LOG, "[MusicService] onHeadlessJsTaskFinish()");
         // Overridden to prevent the service from being terminated
     }
 
@@ -98,12 +101,8 @@ public class MusicService extends HeadlessJsTaskService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(Utils.LOG, "[MusicService] onStartCommand() Intent - " + (intent != null ? intent.getAction() : "isNull"));
 
-        boolean isMediaButton = intent != null && Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction());
-        if(isMediaButton) {
-            MediaButtonReceiver.handleIntent(manager.getMetadata().getSession(), intent);
-        }
-
-        if(!manager.getMetadata().getSession().isActive()) {
+        MediaSessionCompat session = manager.getMetadata().getSession();
+        if(!session.isActive()) {
             ReactInstanceManager reactInstanceManager = getReactNativeHost().getReactInstanceManager();
             ReactContext reactContext = reactInstanceManager.getCurrentReactContext();
 
@@ -120,15 +119,18 @@ public class MusicService extends HeadlessJsTaskService {
                     .build();
 
                 // Sets the service to foreground with an empty notification
-                startForeground(Utils.NOTIFICATION_ID, new NotificationCompat.Builder(this, channel).build());
+                startForeground(Utils.NOTIFICATION_ID, notification);
 
                 // Stops the service right after
-                if(isMediaButton) {
-                    stopSelf();
-                }
+                stopSelf();
             }
         }
+        
+        if(intent != null && Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
+            MediaButtonReceiver.handleIntent(session, intent);
+        }
 
+        super.onStartCommand(intent, flags, startId);
         return START_NOT_STICKY;
     }
 
