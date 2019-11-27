@@ -64,7 +64,10 @@ public class MusicService extends HeadlessJsTaskService {
     public void onCreate(){
         Log.d(Utils.LOG, "[MusicService] onCreate()");
         super.onCreate();
-        create();
+
+        handler = new Handler();
+        manager = new MusicManager(this);
+        mbinder = new MusicBinder(this, manager);
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(Utils.NOTIFICATION_CHANNEL, "Playback", NotificationManager.IMPORTANCE_DEFAULT);
@@ -78,20 +81,6 @@ public class MusicService extends HeadlessJsTaskService {
 
         createWifiLock();
         newWakeLock();
-    }
-
-    public void create() {
-        if (handler == null) {
-            handler = new Handler();
-        }
-
-        if (manager == null) {
-            manager = new MusicManager(this);
-        }
-        
-        if (mbinder == null) {
-            mbinder = new MusicBinder(this, manager);
-        }
     }
 
     @Nullable
