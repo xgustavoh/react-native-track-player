@@ -98,8 +98,8 @@ public class MusicService extends HeadlessJsTaskService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(Utils.LOG, "[MusicService] onStartCommand() Intent - " + (intent != null ? intent.getAction() : "isNull"));
 
-        boolean isMeduaButton = intent != null && Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction());
-        if(isMeduaButton) {
+        boolean isMediaButton = intent != null && Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction());
+        if(isMediaButton) {
             MediaButtonReceiver.handleIntent(manager.getMetadata().getSession(), intent);
         }
 
@@ -123,7 +123,7 @@ public class MusicService extends HeadlessJsTaskService {
                 startForeground(Utils.NOTIFICATION_ID, new NotificationCompat.Builder(this, channel).build());
 
                 // Stops the service right after
-                if(isMeduaButton) {
+                if(isMediaButton) {
                     stopSelf();
                 }
             }
