@@ -6,6 +6,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media.session.MediaButtonReceiver;
@@ -25,6 +29,9 @@ public class MusicService extends HeadlessJsTaskService {
 
     MusicManager manager;
     Handler handler;
+
+    private WifiLock wifiLock;
+    private WakeLock wakeLock;
 
     @Nullable
     @Override
@@ -82,6 +89,14 @@ public class MusicService extends HeadlessJsTaskService {
         }
     }
 
+    @Override
+    public void onCreate(){
+        super.onCreate();
+
+        createWifiLock();
+        newWakeLock();
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -125,6 +140,44 @@ public class MusicService extends HeadlessJsTaskService {
 
         if (manager == null || manager.shouldStopWithApp()) {
             stopSelf();
+        }
+    }
+    
+    @SuppressLint("WifiManagerPotentialLeak")
+    private void createWifiLock() {
+        if(wifiLock == null) {
+            // Create the Wifi lock (this does not acquire the lock, this just creates it)
+            WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, Utils.SERVICE_NAME);
+            wifiLock.setReferenceCounted(false);
+        }
+    }
+
+    @SuppressLint("InvalidWakeLockTag")
+    private void newWakeLock() {
+        if(wakeLock == null) {
+            PowerManager powerManager = (PowerManager)getApplicationContext().getSystemService(Context.POWER_SERVICE);
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Utils.SERVICE_NAME);
+            wakeLock.setReferenceCounted(false);
+        }
+    }
+
+    @SuppressLint("WakelockTimeout")
+    public void lockServices(boolean isLocal) {
+        if (!wakeLock.isHeld()) {
+            wakeLock.acquire();
+        }
+        if (!isLocal && !wifiLock.isHeld()) {
+            wifiLock.acquire();
+        }
+    }
+
+    public void unlockServices() {
+        if (wifiLock != null && wifiLock.isHeld()) {
+            wifiLock.release();
+        }
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
         }
     }
 }
