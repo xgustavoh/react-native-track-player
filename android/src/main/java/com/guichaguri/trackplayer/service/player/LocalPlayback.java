@@ -64,8 +64,12 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
     private void prepare() {
         if(!prepared) {
-            Log.d(Utils.LOG, "Preparing the media source...");
-            player.prepare(source, false, false);
+            Log.d(Utils.LOG, "Preparing the media source...");            
+            boolean haveStartPosition = lastKnownWindow != C.INDEX_UNSET;
+            if (haveStartPosition) {
+                player.seekTo(lastKnownWindow, startPosition);
+            }
+            player.prepare(source, !haveStartPosition, false);
             prepared = true;
         }
     }
@@ -142,10 +146,8 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         source = new ConcatenatingMediaSource();
         player.prepare(source, true, true);
         prepared = false; // We set it to false as the queue is now empty
-
-        lastKnownWindow = C.INDEX_UNSET;
-        lastKnownPosition = C.POSITION_UNSET;
-
+        
+        clearLastKnownPosition(startAutoPlay);
         manager.onReset();
     }
 

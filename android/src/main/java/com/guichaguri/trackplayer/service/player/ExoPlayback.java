@@ -36,6 +36,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     protected List<Track> queue = Collections.synchronizedList(new ArrayList<>());
 
     // https://github.com/google/ExoPlayer/issues/2728
+    protected boolean startAutoPlay = false;
     protected int lastKnownWindow = C.INDEX_UNSET;
     protected long lastKnownPosition = C.POSITION_UNSET;
     protected int previousState = PlaybackStateCompat.STATE_NONE;
@@ -52,6 +53,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
     public void initialize() {
         player.addListener(this);
+        player.setPlayWhenReady(startAutoPlay);
     }
 
     public List<Track> getQueue() {
@@ -88,8 +90,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
         for(int i = 0; i < queue.size(); i++) {
             if(id.equals(queue.get(i).id)) {
-                lastKnownWindow = player.getCurrentWindowIndex();
-                lastKnownPosition = player.getCurrentPosition();
+                updateLastKnownPosition();
 
                 player.seekToDefaultPosition(i);
                 promise.resolve(null);
@@ -107,9 +108,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             promise.reject("no_previous_track", "There is no previous track");
             return;
         }
-
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        updateLastKnownPosition();
 
         player.seekToDefaultPosition(prev);
         promise.resolve(null);
@@ -123,8 +122,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             return;
         }
 
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        updateLastKnownPosition();
 
         player.seekToDefaultPosition(next);
         promise.resolve(null);
@@ -139,20 +137,18 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void stop() {
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        updateLastKnownPosition();
+        startAutoPlay = false;
 
-        player.stop(false);
-        player.setPlayWhenReady(false);
-        player.seekTo(lastKnownWindow,0);
+        player.seekToDefaultPosition();
+        player.stop(true);
     }
 
     public void reset() {
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        clearLastKnownPosition(false);
 
-        player.stop(true);
         player.setPlayWhenReady(false);
+        player.stop(true);
     }
 
     public boolean isRemote() {
@@ -180,8 +176,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void seekTo(long time) {
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        updateLastKnownPosition();
 
         player.seekTo(time);
     }
@@ -257,8 +252,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             manager.onTrackUpdate(previous, lastKnownPosition, next);
         }
 
-        lastKnownWindow = player.getCurrentWindowIndex();
-        lastKnownPosition = player.getCurrentPosition();
+        updateLastKnownPosition();
     }
 
     @Override
@@ -417,5 +411,21 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     public void onMetadata(Metadata metadata) {
         handleId3Metadata(metadata);
         handleIcyMetadata(metadata);
+    }
+    
+    // Updates the current position of the player.
+    protected void updateLastKnownPosition() {
+        if (player != null) {
+            startAutoPlay = player.getPlayWhenReady();
+            lastKnownWindow = player.getCurrentWindowIndex();
+            lastKnownPosition = player.getContentPosition() !== C.TIME_UNSET ? Math.max(0, player.getContentPosition()) : C.TIME_UNSET;
+        }
+    }
+
+    // Resets/Clear the current position of the player.
+    protected void clearLastKnownPosition(boolean autoPlay) {
+        startAutoPlay = autoPlay;
+        lastKnownWindow = C.INDEX_UNSET;
+        lastKnownPosition = C.TIME_UNSET;
     }
 }
