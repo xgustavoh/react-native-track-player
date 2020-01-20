@@ -54,6 +54,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
 
     private boolean stopWithApp = false;
     private boolean alwaysPauseOnInterruption = false;
+    private float duckingVolumeMultiplier = 0.5F;
 
     @SuppressLint("InvalidWakeLockTag")
     public MusicManager(MusicService service) {
@@ -75,6 +76,16 @@ public class MusicManager implements OnAudioFocusChangeListener {
 
     public void setAlwaysPauseOnInterruption(boolean alwaysPauseOnInterruption) {
         this.alwaysPauseOnInterruption = alwaysPauseOnInterruption;
+    }
+    
+    public void setDuckingVolumeMultiplier(float duckingVolumeMultiplier) {
+        if(duckingVolumeMultiplier > 1.0F) {
+            this.duckingVolumeMultiplier = 1.0F;
+        } else if(duckingVolumeMultiplier < 0.0F) {
+            this.duckingVolumeMultiplier = 0.0F;
+        } else {
+            this.duckingVolumeMultiplier = duckingVolumeMultiplier;
+        }
     }
 
     public MetadataManager getMetadata() {
@@ -255,7 +266,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
         }
 
         if (ducking) {
-            playback.setVolumeMultiplier(0.5F);
+            playback.setVolumeMultiplier(duckingVolumeMultiplier);
             wasDucking = true;
         } else if (wasDucking) {
             playback.setVolumeMultiplier(1.0F);
