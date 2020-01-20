@@ -1,6 +1,5 @@
 package com.guichaguri.trackplayer.service;
 
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -56,7 +55,6 @@ public class MusicManager implements OnAudioFocusChangeListener {
     private boolean alwaysPauseOnInterruption = false;
     private float duckingVolumeMultiplier = 0.5F;
 
-    @SuppressLint("InvalidWakeLockTag")
     public MusicManager(MusicService service) {
         this.service = service;
         this.metadata = new MetadataManager(service, this);
@@ -130,7 +128,6 @@ public class MusicManager implements OnAudioFocusChangeListener {
         return new LocalPlayback(service, this, player, cacheMaxSize);
     }
 
-    @SuppressLint("WakelockTimeout")
     public void onPlay() {
         Log.d(Utils.LOG, "onPlay");
         if(playback == null) return;
