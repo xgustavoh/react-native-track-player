@@ -3,6 +3,7 @@ package com.guichaguri.trackplayer.service.player;
 import android.content.Context;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+import android.os.Bundle;
 import com.facebook.react.bridge.Promise;
 import com.google.android.exoplayer2.*;
 import com.google.android.exoplayer2.Player.EventListener;
@@ -338,6 +339,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
     private void handleId3Metadata(Metadata metadata) {
         String title = null, url = null, artist = null, album = null, date = null, genre = null;
+        Bundle extra = new Bundle();
 
         for(int i = 0; i < metadata.length(); i++) {
             Metadata.Entry entry = metadata.get(i);
@@ -353,10 +355,12 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
                     album = id3.value;
                 } else if (id.equals("TOPE") || id.equals("TPE1") || id.equals("TP1")) {
                     artist = id3.value;
-                } else if (id.equals("TDRC") || id.equals("TOR")) {
+                } else if (id.equals("TDAT") || id.equals("TDRC") || id.equals("TOR")) {
                     date = id3.value;
                 } else if (id.equals("TCON") || id.equals("TCO")) {
                     genre = id3.value;
+                } else {
+                    extra.putString(id, id3.value);
                 }
 
             } else if (entry instanceof UrlLinkFrame) {
@@ -372,7 +376,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
         }
 
         if (title != null || url != null || artist != null || album != null || date != null || genre != null) {
-            manager.onMetadataReceived("id3", title, url, artist, album, date, genre);
+            manager.onMetadataReceived("id3", title, url, artist, album, date, genre, extra);
         }
     }
 
@@ -384,7 +388,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
                 // ICY headers
                 IcyHeaders icy = (IcyHeaders)entry;
 
-                manager.onMetadataReceived("icy-headers", icy.name, icy.url, null, null, null, icy.genre);
+                manager.onMetadataReceived("icy-headers", icy.name, icy.url, null, null, null, icy.genre, null);
 
             } else if(entry instanceof IcyInfo) {
                 // ICY data
@@ -401,8 +405,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
                     title = icy.title;
                 }
 
-                manager.onMetadataReceived("icy", title, icy.url, artist, null, null, null);
-
+                manager.onMetadataReceived("icy", title, icy.url, artist, null, null, null, null);
             }
         }
     }
