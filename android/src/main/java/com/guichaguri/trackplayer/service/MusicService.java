@@ -10,6 +10,7 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
+import android.annotation.SuppressLint;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media.session.MediaButtonReceiver;

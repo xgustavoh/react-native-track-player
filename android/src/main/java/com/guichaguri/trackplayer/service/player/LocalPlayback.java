@@ -67,7 +67,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             Log.d(Utils.LOG, "Preparing the media source...");            
             boolean haveStartPosition = lastKnownWindow != C.INDEX_UNSET;
             if (haveStartPosition) {
-                player.seekTo(lastKnownWindow, startPosition);
+                player.seekTo(lastKnownWindow, lastKnownPosition);
             }
             player.prepare(source, !haveStartPosition, false);
             prepared = true;

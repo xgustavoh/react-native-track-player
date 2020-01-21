@@ -421,7 +421,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
         if (player != null) {
             startAutoPlay = player.getPlayWhenReady();
             lastKnownWindow = player.getCurrentWindowIndex();
-            lastKnownPosition = player.getContentPosition() !== C.TIME_UNSET ? Math.max(0, player.getContentPosition()) : C.TIME_UNSET;
+            lastKnownPosition = player.getContentPosition() != C.TIME_UNSET ? Math.max(0, player.getContentPosition()) : C.TIME_UNSET;
         }
     }
 
