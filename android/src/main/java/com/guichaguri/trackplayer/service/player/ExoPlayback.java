@@ -138,11 +138,10 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     }
 
     public void stop() {
-        updateLastKnownPosition();
-        startAutoPlay = false;
+        clearLastKnownPosition(false);
 
-        player.seekToDefaultPosition();
-        player.stop(true);
+        player.setPlayWhenReady(false);
+        player.stop();
     }
 
     public void reset() {

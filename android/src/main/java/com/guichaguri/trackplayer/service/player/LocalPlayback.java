@@ -52,7 +52,6 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         }
 
         super.initialize();
-
         resetQueue();
     }
 
@@ -80,7 +79,11 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         MediaSource trackSource = track.toMediaSource(context, this);
         source.addMediaSource(index, trackSource, manager.getHandler(), Utils.toRunnable(promise));
 
-        prepare();
+        if(startAutoPlay == true) {
+            prepare();
+        } else {
+            player.stop();
+        }
     }
 
     @Override
@@ -94,7 +97,11 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         queue.addAll(index, tracks);
         source.addMediaSources(index, trackList, manager.getHandler(), Utils.toRunnable(promise));
 
-        prepare();
+        if(startAutoPlay == true) {
+            prepare();
+        } else {
+            player.stop();
+        }
     }
 
     @Override
@@ -125,6 +132,9 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             // Fix the window index
             if (index < lastKnownWindow) {
                 lastKnownWindow--;
+            }
+            if(index < currentIndex) {
+                currentIndex--;
             }
         }
     }
@@ -159,7 +169,19 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
     @Override
     public void stop() {
+        int position = player.getCurrentWindowIndex();
         super.stop();
+        
+        source = new ConcatenatingMediaSource();
+        List<MediaSource> trackList = new ArrayList<>();
+        for(Track track : queue) {
+            trackList.add(track.toMediaSource(context, this));
+        }
+
+        source.addMediaSources(trackList);
+        player.prepare(source, true, true);
+        player.seekToDefaultPosition(position);
+        player.stop();
         prepared = false;
     }
 
