@@ -200,6 +200,15 @@ declare namespace RNTrackPlayer {
     public getBufferedProgress: () => number;
   }
 
+  // React Hooks (Requires React v16.8+ and React Native v0.59+)
+
+  export function usePlaybackState(): State;
+  export function useTrackPlayerEvents(
+    events: Array<string>,
+    handler: (payload: any) => void
+  ): void;
+  export function useTrackPlayerProgress(): ProgressComponentState;
+
   // Constants
 
   export const STATE_NONE: State;
