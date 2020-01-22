@@ -225,6 +225,16 @@ If the current track is updated, the notification and the Now Playing Center wil
 | id       | `string`   | The track ID  |
 | metadata | `object`   | A subset of the [Track Object](#track-object) with only the `artwork`, `title`, `artist`, `album`, `description`, `genre`, `date`, `rating` and `duration` properties. |
 
+#### `checkTracks(tracks)`
+Checks a list of songs.
+Returns in 2 different lists the songs to be updated and inserted.
+
+**Returns:** `Promise<`[Checks](#Checks)`>`
+
+| Param    | Type       | Description   |
+| -------- | ---------- | ------------- |
+| tracks | `array` of track ids or a single one | The tracks that will be checked |
+
 ### Player Functions
 #### `updateOptions(options)`
 Updates the configuration for the components.
@@ -503,6 +513,14 @@ Only the `id`, `url`, `title` and `artist` properties are required for basic pla
 | artwork        | `string` or [Resource Object](#resource-object) | The artwork url |
 | pitchAlgorithm | [Pitch Algorithm](#pitch-algorithm) | The pitch algorithm |
 | headers        | `object`                    | An object containing all the headers to use in the HTTP request |
+
+### Checks
+
+| Param          | Type          | Description  |
+| -------------- | ------------- | ------------ |
+| isCurrent      | `boolean`     | The current track is updated |
+| insert         | `array`       | The tracks that have been updated |
+| update         | `array`       | The tracks that are new (will only be inserted) |
 
 ### Resource Object
 Resource objects are the result of `require`/`import` for files.

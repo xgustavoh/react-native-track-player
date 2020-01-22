@@ -258,6 +258,46 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
                 callback.resolve(null);
             }
         });
+    }    
+
+    @ReactMethod
+    public void checkTracks(ReadableArray tracks, final Promise callback) {
+        final ArrayList trackList = Arguments.toList(tracks);
+
+        waitForConnection(() -> { 
+            boolean isCurrent = false;    
+            
+            List insert = new ArrayList();
+            List update = new ArrayList();
+
+            List<Track> queue = binder.getPlayback().getQueue();
+
+            for(Object o : trackList) {
+                if(o instanceof Bundle) {
+                    int i = 0;
+                    for(; i < queue.size(); i++) {
+                        if(queue.get(i).isTrack((Bundle)o)) {
+                            if(queue.get(i).updated(getReactApplicationContext(), (Bundle)o)) {
+                                if(binder.getPlayback().getCurrentTrack() == queue.get(i)) {
+                                    isCurrent = true;
+                                }
+                                update.add(o);
+                            }
+                            break;
+                        }
+                    }
+                    if(i == queue.size()) {
+                        insert.add(o);
+                    }
+                }
+            }
+
+            WritableMap map = Arguments.createMap();
+            map.putBoolean("isCurrent", (Boolean)isCurrent);
+            map.putArray("insert", Arguments.fromList(insert));
+            map.putArray("update", Arguments.fromList(update));
+            callback.resolve(map);
+        });
     }
 
     @ReactMethod

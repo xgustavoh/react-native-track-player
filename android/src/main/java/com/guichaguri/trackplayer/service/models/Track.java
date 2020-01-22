@@ -271,4 +271,70 @@ public class Track {
                 .createMediaSource(uri);
     }
 
+    // Check update
+    private boolean equalsHeaders(Map<String, String> headers) {
+        if(this.headers == null && headers == null) {
+            return true;
+        }
+        if( (this.headers == null && headers != null) ||
+            (this.headers != null && headers == null)) {
+            return false;
+        }
+        return this.headers.equals(headers);
+    }
+
+    public boolean isTrack(Bundle bundle) {
+        return id.equals(bundle.getString("id", ""));
+    }
+
+    public boolean updated(Context context, Bundle bundle) {
+        String contentType = bundle.getString("contentType");
+        if(this.contentType == null && contentType != null) {
+            return true;
+        } else if(this.contentType != null) {
+            if(contentType == null) return true;
+            else if(!this.contentType.equals(contentType)) return true;
+        }
+
+        String userAgent = bundle.getString("userAgent");
+        if(this.userAgent == null && userAgent != null) {
+            return true;
+        } else if(this.userAgent != null) {
+            if(userAgent == null) return true;
+            else if(!this.userAgent.equals(userAgent)) return true;
+        }
+
+        int resource = Utils.getRawResourceId(context, bundle, "url");
+        if(resource == 0 && !uri.equals(Utils.getUri(context, bundle, "url"))) {
+            return true;
+        } else if(resource != 0 && !uri.equals(RawResourceDataSource.buildRawResourceUri(resource))) {
+            return true;
+        }
+
+        String trackType = bundle.getString("type", "default");
+        for(TrackType t : TrackType.values()) {
+            if(t.name.equalsIgnoreCase(trackType)) {
+                if(type != t) {
+                    return true;
+                }
+            }
+        }
+
+        Bundle httpHeaders = bundle.getBundle("headers");
+        if(httpHeaders != null) {
+            Map<String, String> auxHeaders = new HashMap<>();
+            for(String header : httpHeaders.keySet()) {
+                auxHeaders.put(header, httpHeaders.getString(header));
+            }
+
+            if(!equalsHeaders(auxHeaders)){
+                return true;
+            }
+
+        } else if(this.headers != null){
+            return true;
+        }
+
+        return false;
+    }
 }

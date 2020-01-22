@@ -113,6 +113,13 @@ declare namespace RNTrackPlayer {
     title: string;
   }
 
+  interface StateChecks {
+    isCurrent: boolean;
+
+    insert: Track | Track[];
+    update: Track | Track[];
+  }
+
   export interface MetadataOptions {
     ratingType?: RatingType;
     jumpInterval?: number;
@@ -154,6 +161,7 @@ declare namespace RNTrackPlayer {
   export function skipToNext(): Promise<void>;
   export function skipToPrevious(): Promise<void>;
   export function removeUpcomingTracks(): Promise<void>;
+  export function checkTracks(tracks: Track | Track[]): Promise<StateChecks>;
 
   // Control Center / Notification Metadata Commands
   export function updateOptions(options: MetadataOptions): void;
