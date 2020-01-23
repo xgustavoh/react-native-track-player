@@ -9,6 +9,7 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
+import com.google.android.exoplayer2.source.BehindLiveWindowException;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -225,6 +226,10 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
     public void onPlayerError(ExoPlaybackException error) {
         prepared = false;
         super.onPlayerError(error);
+        if (isBehindLiveWindow(error)) {
+            clearStartPosition(true);
+            prepare();
+        }
     }
 
     @Override
@@ -241,4 +246,17 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         }
     }
 
+    private static boolean isBehindLiveWindow(ExoPlaybackException e) {
+        if (e.type != ExoPlaybackException.TYPE_SOURCE) {
+            return false;
+        }
+        Throwable cause = e.getSourceException();
+        while (cause != null) {
+            if (cause instanceof BehindLiveWindowException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
+    }
 }
