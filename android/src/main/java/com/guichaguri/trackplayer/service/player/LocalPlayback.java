@@ -67,7 +67,11 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             Log.d(Utils.LOG, "Preparing the media source...");            
             boolean haveStartPosition = lastKnownWindow != C.INDEX_UNSET;
             if (haveStartPosition) {
-                player.seekTo(lastKnownWindow, lastKnownPosition);
+                if(lastKnownPosition == C.TIME_UNSET) {
+                    player.seekToDefaultPosition(lastKnownWindow);
+                } else {
+                    player.seekTo(lastKnownWindow, lastKnownPosition);
+                }
             }
             player.prepare(source, !haveStartPosition, false);
             prepared = true;
@@ -226,9 +230,10 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
     public void onPlayerError(ExoPlaybackException error) {
         prepared = false;
         super.onPlayerError(error);
+
         if (isBehindLiveWindow(error)) {
-            clearStartPosition(true);
-            prepare();
+            stop();
+            play();
         }
     }
 

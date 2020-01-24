@@ -238,11 +238,13 @@ public class Track {
                         long loadDurationMs,
                         IOException exception,
                         int errorCount) {
-                        if (exception instanceof HttpDataSourceException) {
-                            return (1 << Math.min(errorCount - 1, 10)) * 1000;
-                        }
-                        return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
+                        // if (exception instanceof HttpDataSourceException) {
+                        //     return (1 << Math.min(errorCount - 1, 10)) * 1000;
+                        // }
+                        // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
+                        return Math.min(errorCount, 10) * 500;
                     }
+
                     @Override
                     public long getRetryDelayMsFor(
                         int dataType,
@@ -250,14 +252,15 @@ public class Track {
                         IOException exception,
                         int errorCount) {
 
-                        if (
-                                exception instanceof HttpDataSourceException
-                            || (exception instanceof InvalidResponseCodeException && ((InvalidResponseCodeException) exception).responseCode == 500)) {
-                            return (1 << Math.min(errorCount - 1, 3)) * 1000;
-                        }
-
-                        return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
+                        // if (
+                        //         exception instanceof HttpDataSourceException
+                        //     || (exception instanceof InvalidResponseCodeException && ((InvalidResponseCodeException) exception).responseCode == 500)) {
+                        //     return (1 << Math.min(errorCount - 1, 3)) * 1000;
+                        // }
+                        // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
+                        return Math.min(errorCount, 10) * 500;
                     }
+
                     @Override
                     public int getMinimumLoadableRetryCount(int dataType) {
                         return Integer.MAX_VALUE;

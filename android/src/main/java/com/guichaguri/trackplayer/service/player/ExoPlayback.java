@@ -430,4 +430,21 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
         lastKnownWindow = C.INDEX_UNSET;
         lastKnownPosition = C.TIME_UNSET;
     }
+
+    // Verifica se foi um erro de Atraso com a transmissão.
+    private static boolean isBehindLiveWindow(ExoPlaybackException e) {
+        if (e.type != ExoPlaybackException.TYPE_SOURCE) {
+            return false;
+        }
+
+        return true;
+        // Throwable cause = e.getSourceException();
+        // while (cause != null) {
+        //     if (cause instanceof BehindLiveWindowException) {
+        //         return true;
+        //     }
+        //     cause = cause.getCause();
+        // }
+        // return false;
+    }
 }
