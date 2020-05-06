@@ -75,7 +75,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
         queue.set(index, track);
 
         if(currentIndex == index)
-            manager.getMetadata().updateMetadata(track);
+            manager.getMetadata().updateMetadata(this, track);
     }
 
     public Track getCurrentTrack() {
@@ -295,8 +295,12 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             manager.onStateChange(state);
             previousState = state;
 
-            if(state == PlaybackStateCompat.STATE_STOPPED) {
+            if(state == PlaybackStateCompat.STATE_STOPPED) {             
                 manager.onEnd(getCurrentTrack(), getPosition());
+                Track previous = getCurrentTrack();
+                long position = getPosition();
+                manager.onTrackUpdate(previous, position, null);
+                manager.onEnd(previous, position);
             }
         }
     }

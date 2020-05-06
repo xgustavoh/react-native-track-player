@@ -75,6 +75,7 @@ declare namespace RNTrackPlayer {
     minBuffer?: number;
     maxBuffer?: number;
     playBuffer?: number;
+    backBuffer?: number;
     maxCacheSize?: number;
     iosCategory?:
       | "playback"
@@ -164,7 +165,7 @@ declare namespace RNTrackPlayer {
   export function checkTracks(tracks: Track | Track[]): Promise<StateChecks>;
 
   // Control Center / Notification Metadata Commands
-  export function updateOptions(options: MetadataOptions): void;
+  export function updateOptions(options: MetadataOptions): Promise<void>;
   export function updateMetadataForTrack(
     id: string,
     metadata: TrackMetadata
@@ -208,14 +209,18 @@ declare namespace RNTrackPlayer {
     public getBufferedProgress: () => number;
   }
 
-  // React Hooks (Requires React v16.8+ and React Native v0.59+)
-
+  // Hooks
   export function usePlaybackState(): State;
   export function useTrackPlayerEvents(
-    events: Array<string>,
-    handler: (payload: any) => void
+    events: string[],
+    handler: (event: any) => void
   ): void;
-  export function useTrackPlayerProgress(): ProgressComponentState;
+  export function useInterval(callback: () => void, delay: number): void;
+  export function useWhenPlaybackStateChanges(callback: () => void): void;
+  export function usePlaybackStateIs(...states: string[]): boolean;
+  export function useTrackPlayerProgress(
+    interval?: number
+  ): ProgressComponentState;
 
   // Constants
 
@@ -252,4 +257,28 @@ declare namespace RNTrackPlayer {
   export const PITCH_ALGORITHM_LINEAR: PitchAlgorithm;
   export const PITCH_ALGORITHM_MUSIC: PitchAlgorithm;
   export const PITCH_ALGORITHM_VOICE: PitchAlgorithm;
+
+  export const TrackPlayerEvents: {
+    REMOTE_PLAY: EventType;
+    REMOTE_PLAY_ID: EventType;
+    REMOTE_PLAY_SEARCH: EventType;
+    REMOTE_PAUSE: EventType;
+    REMOTE_STOP: EventType;
+    REMOTE_SKIP: EventType;
+    REMOTE_NEXT: EventType;
+    REMOTE_PREVIOUS: EventType;
+    REMOTE_SEEK: EventType;
+    REMOTE_SET_RATING: EventType;
+    REMOTE_JUMP_FORWARD: EventType;
+    REMOTE_JUMP_BACKWARD: EventType;
+    REMOTE_DUCK: EventType;
+    REMOTE_LIKE: EventType;
+    REMOTE_DISLIKE: EventType;
+    REMOTE_BOOKMARK: EventType;
+    PLAYBACK_STATE: EventType;
+    PLAYBACK_TRACK_CHANGED: EventType;
+    PLAYBACK_QUEUE_ENDED: EventType;
+    PLAYBACK_ERROR: EventType;
+    PLAYBACK_METADATA_RECEIVED: EventType;
+  };
 }
