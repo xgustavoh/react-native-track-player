@@ -65,9 +65,6 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         boolean autoPlay = isAutoPlay == true && queue.size() == 0;
 
         super.add(track, index);
-        if(autoPlay) {
-            setCurrentTrack(0);
-        }
         promise.resolve(null);
     }
 
