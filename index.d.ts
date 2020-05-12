@@ -75,6 +75,7 @@ declare namespace RNTrackPlayer {
     minBuffer?: number;
     maxBuffer?: number;
     playBuffer?: number;
+    playRebuffer?: number;
     backBuffer?: number;
     maxCacheSize?: number;
     iosCategory?:
