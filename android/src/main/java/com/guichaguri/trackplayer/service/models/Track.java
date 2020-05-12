@@ -40,8 +40,6 @@ public class Track {
         for(Object o : objects) {
             if(o instanceof Bundle) {
                 tracks.add(new Track(context, (Bundle)o, ratingType));
-            } else {
-                return null;
             }
         }
 
@@ -51,6 +49,7 @@ public class Track {
     public String id;
     public Uri uri;
     public int resourceId;
+    public boolean isRemote;
 
     public TrackType type = TrackType.DEFAULT;
 
@@ -80,8 +79,11 @@ public class Track {
 
         if(resourceId == 0) {
             uri = Utils.getUri(context, bundle, "url");
+            String sURI = uri.toString();
+            isRemote = (sURI.startsWith("http://") || sURI.startsWith("https://")) && !sURI.contains("127.0.0.1");
         } else {
             uri = RawResourceDataSource.buildRawResourceUri(resourceId);
+            isRemote = false;
         }
 
         String trackType = bundle.getString("type", "default");
@@ -242,7 +244,7 @@ public class Track {
                         //     return (1 << Math.min(errorCount - 1, 10)) * 1000;
                         // }
                         // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
-                        return Math.min(errorCount, 10) * 500;
+                        return Math.max(Math.min(errorCount, 10) * 500, 500);
                     }
 
                     @Override
@@ -258,7 +260,7 @@ public class Track {
                         //     return (1 << Math.min(errorCount - 1, 3)) * 1000;
                         // }
                         // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
-                        return Math.min(errorCount, 10) * 500;
+                        return Math.max(Math.min(errorCount, 10) * 500, 500);
                     }
 
                     @Override

@@ -268,7 +268,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
         if (ducking) {
             playback.setVolumeMultiplier(duckingVolumeMultiplier);
             wasDucking = true;
-        } else if (wasDucking) {
+        } else if (!ducking && wasDucking) {
             playback.setVolumeMultiplier(1.0F);
             wasDucking = false;
         }
@@ -276,6 +276,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
         Bundle bundle = new Bundle();
         bundle.putBoolean("permanent", permanent);
         bundle.putBoolean("paused", paused);
+        bundle.putBoolean("ducking", ducking);
         service.emit(MusicEvents.BUTTON_DUCK, bundle);
     }
 

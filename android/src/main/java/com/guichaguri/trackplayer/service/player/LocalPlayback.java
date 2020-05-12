@@ -1,17 +1,14 @@
 package com.guichaguri.trackplayer.service.player;
 
 import android.content.Context;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import com.facebook.react.bridge.Promise;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.database.DatabaseProvider;
 import com.google.android.exoplayer2.database.ExoDatabaseProvider;
-import com.google.android.exoplayer2.source.BehindLiveWindowException;
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory;
@@ -21,9 +18,7 @@ import com.guichaguri.trackplayer.service.MusicManager;
 import com.guichaguri.trackplayer.service.Utils;
 import com.guichaguri.trackplayer.service.models.Track;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,11 +26,10 @@ import java.util.List;
  */
 public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
-    private final long cacheMaxSize;
-
     private SimpleCache cache;
-    private ConcatenatingMediaSource source;
-    private boolean prepared = false;
+    private final long cacheMaxSize;
+    // private ConcatenatingMediaSource source;
+    // private boolean prepared = false;
 
     public LocalPlayback(Context context, MusicManager manager, SimpleExoPlayer player, long maxCacheSize) {
         super(context, manager, player);
@@ -53,7 +47,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         }
 
         super.initialize();
-        resetQueue();
+        reset();
     }
 
     public DataSource.Factory enableCaching(DataSource.Factory ds) {
@@ -62,206 +56,145 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         return new CacheDataSourceFactory(cache, ds, CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
     }
 
-    private void prepare() {
-        if(!prepared) {
-            Log.d(Utils.LOG, "Preparing the media source...");            
-            boolean haveStartPosition = lastKnownWindow != C.INDEX_UNSET;
-            if (haveStartPosition) {
-                if(lastKnownPosition == C.TIME_UNSET) {
-                    player.seekToDefaultPosition(lastKnownWindow);
-                } else {
-                    player.seekTo(lastKnownWindow, lastKnownPosition);
-                }
-            }
-            player.prepare(source, !haveStartPosition, false);
-            prepared = true;
-        }
-    }
-
-    @Override
+    /**
+     * Add new track to Queue
+     * @param track Track
+     * @param index Index to insert
+     */
     public void add(Track track, int index, Promise promise) {
-        queue.add(index, track);
-        MediaSource trackSource = track.toMediaSource(context, this);
-        source.addMediaSource(index, trackSource, manager.getHandler(), Utils.toRunnable(promise));
+        boolean autoPlay = isAutoPlay == true && queue.size() == 0;
 
-        if(startAutoPlay == true) {
-            prepare();
-        } else {
-            player.stop();
+        super.add(track, index);
+        if(autoPlay) {
+            setCurrentTrack(0);
         }
+        promise.resolve(null);
     }
 
-    @Override
+    /**
+     * Add list os Tracks in Queue
+     * @param tracks
+     * @param index
+     */
     public void add(Collection<Track> tracks, int index, Promise promise) {
-        List<MediaSource> trackList = new ArrayList<>();
-
-        for(Track track : tracks) {
-            trackList.add(track.toMediaSource(context, this));
-        }
-
-        queue.addAll(index, tracks);
-        source.addMediaSources(index, trackList, manager.getHandler(), Utils.toRunnable(promise));
-
-        if(startAutoPlay == true) {
-            prepare();
-        } else {
-            player.stop();
-        }
+        super.add(tracks, index);
+        promise.resolve(null);
     }
 
-    @Override
+    /**
+     * Remove Tracks to list (queue)
+     * @param indexes
+     */
     public void remove(List<Integer> indexes, Promise promise) {
-        int currentIndex = player.getCurrentWindowIndex();
+        super.remove(indexes);
+        promise.resolve(null);
+    }
 
-        // Sort the list so we can loop through sequentially
-        Collections.sort(indexes);
+    /**
+     * Set current Track
+     * @param pos Queue position
+     */
+    @Override
+    public void setCurrentTrack(int pos) {
+        Log.d(Utils.LOG, "Preparing the media source... Pos:"+ pos);
 
-        for(int i = indexes.size() - 1; i >= 0; i--) {
-            int index = indexes.get(i);
+        if(pos == C.INDEX_UNSET && currentTrackPos == C.INDEX_UNSET) {
+            return;
+        }
 
-            // Skip indexes that are the current track or are out of bounds
-            if(index == currentIndex || index < 0 || index >= queue.size()) {
-                // Resolve the promise when the last index is invalid
-                if(i == 0) promise.resolve(null);
-                continue;
-            }
+        int state = getState();
+        if(pos == currentTrackPos && state == PlaybackStateCompat.STATE_PLAYING) {
+            return;
+        }
 
-            queue.remove(index);
+        Track t = getTrack(pos);
+        if(pos != C.INDEX_UNSET && t != null) {
+            player.prepare(t.toMediaSource(context, this), true, true);
+        } else {
+            player.stop(true);
+        }
 
-            if(i == 0) {
-                source.removeMediaSource(index, manager.getHandler(), Utils.toRunnable(promise));
-            } else {
-                source.removeMediaSource(index);
-            }
+        super.setCurrentTrack(pos);
+    }
 
-            // Fix the window index
-            if (index < lastKnownWindow) {
-                lastKnownWindow--;
-            }
-            if(index < currentIndex) {
-                currentIndex--;
-            }
+    /**
+     * Skip to Track
+     * @param id
+     * @param promise
+     */
+    public void skip(String id, Promise promise) {
+        if(super.skip(id) != -1) {
+            promise.resolve(null);
+        } else {
+            promise.reject("track_not_in_queue", "track not found in queue");
         }
     }
 
-    @Override
-    public void removeUpcomingTracks() {
-        int currentIndex = player.getCurrentWindowIndex();
-        if (currentIndex == C.INDEX_UNSET) return;
 
-        for (int i = queue.size() - 1; i > currentIndex; i--) {
-            queue.remove(i);
-            source.removeMediaSource(i);
+    /**
+     * Skip to Previous Track
+     */
+    public void skipToPrevious(Promise promise) {
+        Track track = super.skipToPrevious();
+        if(track == null) {
+            promise.reject("track_queue_empty", "not track in queue");
+        } else {
+            promise.resolve(null);
         }
     }
 
-    private void resetQueue() {
-        queue.clear();
-
-        source = new ConcatenatingMediaSource();
-        player.prepare(source, true, true);
-        prepared = false; // We set it to false as the queue is now empty
-        
-        clearLastKnownPosition(startAutoPlay);
-        manager.onReset();
-    }
-
-    @Override
-    public void play() {
-        prepare();
-        super.play();
-    }
-
-    @Override
-    public void stop() {
-        int position = player.getCurrentWindowIndex();
-        super.stop();
-        
-        source = new ConcatenatingMediaSource();
-        List<MediaSource> trackList = new ArrayList<>();
-        for(Track track : queue) {
-            trackList.add(track.toMediaSource(context, this));
+    /**
+     * Skip to Next Track
+     */
+    public void skipToNext(Promise promise) {
+        Track track = super.skipToNext();
+        if(track == null) {
+            promise.reject("track_queue_empty", "not track in queue");
+        } else {
+            promise.resolve(null);
         }
-
-        source.addMediaSources(trackList);
-        player.prepare(source, true, true);
-        player.seekToDefaultPosition(position);
-        player.stop();
-        prepared = false;
     }
 
-    @Override
-    public void seekTo(long time) {
-        prepare();
-        super.seekTo(time);
-    }
-
-    @Override
-    public void reset() {
-        Track track = getCurrentTrack();
-        long position = player.getCurrentPosition();
-
-        super.reset();
-        resetQueue();
-
-        manager.onTrackUpdate(track, position, null);
-    }
-
-    @Override
+    /**
+     * Get volume ExoPlayer
+     * @return volume * multiplier
+     */
     public float getPlayerVolume() {
         return player.getVolume();
     }
 
-    @Override
+    /**
+     * Set volume ExoPlayer
+     * @param volume
+     */
     public void setPlayerVolume(float volume) {
         player.setVolume(volume);
     }
 
     @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if(playbackState == Player.STATE_ENDED) {
-            prepared = false;
-        }
-
-        super.onPlayerStateChanged(playWhenReady, playbackState);
-    }
-
-    @Override
     public void onPlayerError(ExoPlaybackException error) {
-        prepared = false;
         super.onPlayerError(error);
-
         if (isBehindLiveWindow(error)) {
             stop();
             play();
         }
     }
 
+    /**
+     * destroy the Player
+     */
     @Override
     public void destroy() {
         super.destroy();
 
         if(cache != null) {
-            try {
-                cache.release();
-                cache = null;
-            } catch(Exception ex) {
-                Log.w(Utils.LOG, "Couldn't release the cache properly", ex);
-            }
-        }
+             try {
+                 cache.release();
+                 cache = null;
+             } catch(Exception ex) {
+                 Log.w(Utils.LOG, "Couldn't release the cache properly", ex);
+             }
+         }
     }
 
-    private static boolean isBehindLiveWindow(ExoPlaybackException e) {
-        if (e.type != ExoPlaybackException.TYPE_SOURCE) {
-            return false;
-        }
-        Throwable cause = e.getSourceException();
-        while (cause != null) {
-            if (cause instanceof BehindLiveWindowException) {
-                return true;
-            }
-            cause = cause.getCause();
-        }
-        return false;
-    }
 }

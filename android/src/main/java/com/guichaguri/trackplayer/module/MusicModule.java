@@ -17,6 +17,7 @@ import com.guichaguri.trackplayer.service.MusicService;
 import com.guichaguri.trackplayer.service.Utils;
 import com.guichaguri.trackplayer.service.models.Track;
 import com.guichaguri.trackplayer.service.player.ExoPlayback;
+import com.guichaguri.trackplayer.service.player.LocalPlayback;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -208,14 +209,11 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
             }
 
             List<Track> queue = binder.getPlayback().getQueue();
-            int index = -1;
+            int index = 0;
 
             if(insertBeforeId != null) {
-                for(int i = 0; i < queue.size(); i++) {
-                    if(queue.get(i).id.equals(insertBeforeId)) {
-                        index = i;
-                        break;
-                    }
+                while(index < queue.size() && !queue.get(index).id.equals(insertBeforeId)) {
+                    index++;
                 }
             } else {
                 index = queue.size();
@@ -226,9 +224,9 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
             } else if(trackList == null || trackList.isEmpty()) {
                 callback.reject("invalid_track_object", "Track is missing a required key");
             } else if(trackList.size() == 1) {
-                binder.getPlayback().add(trackList.get(0), index, callback);
+                ((LocalPlayback)binder.getPlayback()).add(trackList.get(0), index, callback);
             } else {
-                binder.getPlayback().add(trackList, index, callback);
+                ((LocalPlayback)binder.getPlayback()).add(trackList, index, callback);
             }
         });
     }
@@ -253,7 +251,7 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
             }
 
             if (!indexes.isEmpty()) {
-                binder.getPlayback().remove(indexes, callback);
+                ((LocalPlayback)binder.getPlayback()).remove(indexes, callback);
             } else {
                 callback.resolve(null);
             }
@@ -337,17 +335,17 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
 
     @ReactMethod
     public void skip(final String track, final Promise callback) {
-        waitForConnection(() -> binder.getPlayback().skip(track, callback));
+        waitForConnection(() -> ((LocalPlayback)binder.getPlayback()).skip(track, callback));
     }
 
     @ReactMethod
     public void skipToNext(final Promise callback) {
-        waitForConnection(() -> binder.getPlayback().skipToNext(callback));
+        waitForConnection(() -> ((LocalPlayback)binder.getPlayback()).skipToNext(callback));
     }
 
     @ReactMethod
     public void skipToPrevious(final Promise callback) {
-        waitForConnection(() -> binder.getPlayback().skipToPrevious(callback));
+        waitForConnection(() -> ((LocalPlayback)binder.getPlayback()).skipToPrevious(callback));
     }
 
     @ReactMethod
