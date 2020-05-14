@@ -225,11 +225,11 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      * @return track
      */
     public Track skipToPrevious() {
-        if (currentTrackPos == C.INDEX_UNSET || queue.size() == 0) {
+        if (queue.size() == 0) {
             return null;
         }
 
-        int pos = currentTrackPos;
+        int pos = currentTrackPos == C.INDEX_UNSET ? 0 : currentTrackPos;
         if (pos == 0) {
             pos = queue.size() - 1;
         } else {
@@ -245,11 +245,11 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      * @return track
      */
     public Track skipToNext() {
-        if (currentTrackPos == C.INDEX_UNSET || queue.size() == 0) {
+        if (queue.size() == 0) {
             return null;
         }
 
-        int pos = currentTrackPos;
+        int pos = currentTrackPos == C.INDEX_UNSET ? queue.size() - 1 : currentTrackPos;
         if (pos == queue.size() - 1 ) {
             pos = 0;
         } else {
