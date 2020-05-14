@@ -12,13 +12,17 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
+import com.google.android.exoplayer2.source.hls.HlsDataSourceFactory;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.source.hls.playlist.HlsPlaylistParserFactory;
+import com.google.android.exoplayer2.source.hls.playlist.HlsPlaylistTracker;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
 import com.google.android.exoplayer2.upstream.*;
 import com.google.android.exoplayer2.upstream.HttpDataSource.*;
 import com.google.android.exoplayer2.util.Util;
 import com.guichaguri.trackplayer.service.Utils;
+import com.guichaguri.trackplayer.service.hunter.HunterHlsMediaSource;
 import com.guichaguri.trackplayer.service.player.LocalPlayback;
 
 import java.io.IOException;
@@ -232,43 +236,7 @@ public class Track {
     }
 
     private MediaSource createHlsSource(DataSource.Factory factory) {
-        return new HlsMediaSource.Factory(factory)
-                .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy() {
-                    @Override
-                    public long getBlacklistDurationMsFor(
-                        int dataType,
-                        long loadDurationMs,
-                        IOException exception,
-                        int errorCount) {
-                        // if (exception instanceof HttpDataSourceException) {
-                        //     return (1 << Math.min(errorCount - 1, 10)) * 1000;
-                        // }
-                        // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
-                        return Math.max(Math.min(errorCount, 10) * 500, 500);
-                    }
-
-                    @Override
-                    public long getRetryDelayMsFor(
-                        int dataType,
-                        long loadDurationMs,
-                        IOException exception,
-                        int errorCount) {
-
-                        // if (
-                        //         exception instanceof HttpDataSourceException
-                        //     || (exception instanceof InvalidResponseCodeException && ((InvalidResponseCodeException) exception).responseCode == 500)) {
-                        //     return (1 << Math.min(errorCount - 1, 3)) * 1000;
-                        // }
-                        // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
-                        return Math.max(Math.min(errorCount, 10) * 500, 500);
-                    }
-
-                    @Override
-                    public int getMinimumLoadableRetryCount(int dataType) {
-                        return Integer.MAX_VALUE;
-                    }
-                })
-                .createMediaSource(uri);
+        return new HunterHlsMediaSource(factory, uri);
     }
 
     private MediaSource createSsSource(DataSource.Factory factory) {
