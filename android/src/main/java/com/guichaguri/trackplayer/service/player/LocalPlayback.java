@@ -62,8 +62,6 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
      * @param index Index to insert
      */
     public void add(Track track, int index, Promise promise) {
-        boolean autoPlay = isAutoPlay == true && queue.size() == 0;
-
         super.add(track, index);
         promise.resolve(null);
     }
@@ -100,13 +98,14 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         }
 
         int state = getState();
-        if(pos == currentTrackPos && state == PlaybackStateCompat.STATE_PLAYING) {
+        if(pos == currentTrackPos && (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.ACTION_PAUSE)) {
             return;
         }
 
         Track t = getTrack(pos);
         if(pos != C.INDEX_UNSET && t != null) {
-            player.prepare(t.toMediaSource(context, this), true, true);
+            player.seekTo(0, 0);
+            player.prepare(t.toMediaSource(context, this));
         } else {
             player.stop(true);
         }

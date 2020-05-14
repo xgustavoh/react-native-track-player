@@ -86,8 +86,6 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      * @param index Index to insert
      */
     public void add(Track track, int index) {
-        boolean autoPlay = isAutoPlay == true && queue.size() == 0;
-
         boolean insert = true;
         for(int i=0; i < queue.size(); i++){
             if(queue.get(i).id == track.id){
@@ -105,9 +103,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             queue.add(index, track);
         }
 
-        if(autoPlay) {
-            play();
-        } else if(currentTrack != null) {
+        if(currentTrack != null) {
             currentTrackPos = queue.indexOf(currentTrack);
         }
     }
@@ -118,8 +114,6 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      * @param index
      */
     public void add(Collection<Track> tracks, int index) {
-        boolean autoPlay = isAutoPlay == true && queue.size() == 0;
-
         for(Track t : tracks) {
             boolean insert = true;
             for(int i=0; i < queue.size(); i++){
@@ -139,9 +133,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             }
         }
 
-        if(autoPlay) {
-            play();
-        } else if(currentTrack != null) {
+        if(currentTrack != null) {
             currentTrackPos = queue.indexOf(currentTrack);
         }
     }
@@ -316,13 +308,12 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             return;
         }
 
+        player.setPlayWhenReady(true);
         if(currentTrackPos == C.INDEX_UNSET) {
             setCurrentTrack(0);
         } else {
             setCurrentTrack(currentTrackPos);
         }
-
-        player.setPlayWhenReady(true);
         updateLastKnownPosition();
     }
 
