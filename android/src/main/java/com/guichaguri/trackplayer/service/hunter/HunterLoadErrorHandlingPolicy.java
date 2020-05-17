@@ -1,10 +1,11 @@
 package com.guichaguri.trackplayer.service.hunter;
 
-import android.util.Log;
-
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.ParserException;
+import com.google.android.exoplayer2.upstream.HttpDataSource.InvalidResponseCodeException;
 import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
-import com.guichaguri.trackplayer.service.Utils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class HunterLoadErrorHandlingPolicy implements LoadErrorHandlingPolicy {
@@ -15,11 +16,12 @@ public class HunterLoadErrorHandlingPolicy implements LoadErrorHandlingPolicy {
             IOException exception,
             int errorCount) {
 
-        Log.e(Utils.LOG, "getBlacklistDurationMsFor: dataType: "+dataType+", loadDurationMs: "+loadDurationMs+", errorCount: "+errorCount+" \n" + exception.getMessage());
-        // if (exception instanceof HttpDataSourceException) {
-        //     return (1 << Math.min(errorCount - 1, 10)) * 1000;
-        // }
-        // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
+        if (    exception instanceof FileNotFoundException
+                || (exception instanceof InvalidResponseCodeException && ((InvalidResponseCodeException)exception).responseCode != 500)
+                || (errorCount > 1 && exception instanceof ParserException)) {
+            return C.TIME_UNSET;
+        }
+
         return Math.max(Math.min(errorCount, 10) * 500, 500);
     }
 
@@ -30,13 +32,12 @@ public class HunterLoadErrorHandlingPolicy implements LoadErrorHandlingPolicy {
             IOException exception,
             int errorCount) {
 
-        Log.e(Utils.LOG, "getRetryDelayMsFor: dataType: "+dataType+", loadDurationMs: "+loadDurationMs+", errorCount: "+errorCount+" \n" + exception.getMessage());
-        // if (
-        //         exception instanceof HttpDataSourceException
-        //     || (exception instanceof InvalidResponseCodeException && ((InvalidResponseCodeException) exception).responseCode == 500)) {
-        //     return (1 << Math.min(errorCount - 1, 3)) * 1000;
-        // }
-        // return super.getBlacklistDurationMsFor(dataType, loadDurationMs, exception, errorCount);
+        if (    exception instanceof FileNotFoundException
+                || (exception instanceof InvalidResponseCodeException && ((InvalidResponseCodeException)exception).responseCode != 500)
+                || (errorCount > 1 && exception instanceof ParserException)) {
+            return C.TIME_UNSET;
+        }
+
         return Math.max(Math.min(errorCount, 10) * 500, 500);
     }
 

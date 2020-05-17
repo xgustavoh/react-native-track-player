@@ -1,10 +1,10 @@
 package com.guichaguri.trackplayer.service.player;
 
 import android.content.Context;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.os.Bundle;
 
+import android.support.v4.media.session.PlaybackStateCompat;
 import com.google.android.exoplayer2.*;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.Timeline.Window;
@@ -276,7 +276,9 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             currentTrackPos = pos;
         }
 
-        manager.onTrackUpdate(old, position, currentTrack);
+        if(pos != C.INDEX_UNSET && old != currentTrack) {
+            manager.onTrackUpdate(old, position, currentTrack);
+        }
     }
 
     /**
@@ -397,7 +399,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      * @return volume -> [volume] / multiplier
      */
     public float getVolume() {
-        return getPlayerVolume() / volumeMultiplier;
+        return volumeMultiplier == 0 ? 0 : getPlayerVolume() / volumeMultiplier;
     }
 
     /**
@@ -415,6 +417,13 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     public void setVolumeMultiplier(float multiplier) {
         setPlayerVolume(getVolume() * multiplier);
         this.volumeMultiplier = multiplier;
+    }
+
+    /**
+     * Get multiplier volume ExoPlayer
+     */
+    public float getVolumeMultiplier() {
+        return this.volumeMultiplier;
     }
 
     /**

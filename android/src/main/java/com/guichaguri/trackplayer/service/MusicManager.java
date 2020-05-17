@@ -39,6 +39,8 @@ public class MusicManager implements OnAudioFocusChangeListener {
     private AudioFocusRequest focus = null;
     private boolean hasAudioFocus = false;
     private boolean wasDucking = false;
+    private float dVolume = 1;
+    private float dVolumeMultiplier = 1;
 
     private BroadcastReceiver noisyReceiver = new BroadcastReceiver() {
         @Override
@@ -131,7 +133,7 @@ public class MusicManager implements OnAudioFocusChangeListener {
         Track track = playback.getCurrentTrack();
         if(track == null) return;
 
-        if(!playback.isRemote()) {
+        if(playback.isRemote()) {
             requestFocus();
 
             if(!receivingNoisyEvents) {
@@ -240,33 +242,38 @@ public class MusicManager implements OnAudioFocusChangeListener {
     public void onAudioFocusChange(int focus) {
         Log.d(Utils.LOG, "onDuck");
 
-        boolean permanent = false;
         boolean paused = false;
         boolean ducking = false;
+        boolean permanent = false;
 
         switch(focus) {
             case AudioManager.AUDIOFOCUS_LOSS:
                 permanent = true;
                 abandonFocus();
+
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                 paused = true;
                 break;
+
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                if (alwaysPauseOnInterruption)
+                if(alwaysPauseOnInterruption) {
                     paused = true;
-                else
-                    ducking = true;
-                break;
-            default:
+                }
+                ducking = true;
                 break;
         }
 
-        if (ducking) {
-            playback.setVolumeMultiplier(duckingVolumeMultiplier);
+        Log.d(Utils.LOG, "Focus: " + focus +" | Paused? "+paused+", onDuck? "+ducking+", wasDucking? "+wasDucking);
+
+        if (ducking || (!alwaysPauseOnInterruption && paused)) {
             wasDucking = true;
-        } else if (!ducking && wasDucking) {
-            playback.setVolumeMultiplier(1.0F);
+            dVolume = playback.getVolume();
+            dVolumeMultiplier = playback.getVolumeMultiplier();
+            playback.setVolumeMultiplier(paused ? 0 : duckingVolumeMultiplier);
+        } else if (!ducking && !paused && wasDucking) {
             wasDucking = false;
+            playback.setVolumeMultiplier(dVolumeMultiplier);
+            playback.setVolume(dVolume);
         }
 
         Bundle bundle = new Bundle();

@@ -91,7 +91,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
      */
     @Override
     public void setCurrentTrack(int pos) {
-        Log.d(Utils.LOG, "Preparing the media source... Pos:"+ pos);
+        Log.d(Utils.LOG, "Preparing the media source... Pos:"+ pos+", "+currentTrackPos);
 
         if(pos == C.INDEX_UNSET && currentTrackPos == C.INDEX_UNSET) {
             return;
@@ -169,10 +169,12 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
 
     @Override
     public void onPlayerError(ExoPlaybackException error) {
+        Log.e(Utils.LOG, "onPlayerError:"+error.type+" "+error.getMessage());
         super.onPlayerError(error);
         if (isBehindLiveWindow(error)) {
-            stop();
-            play();
+            int pos = currentTrackPos;
+            currentTrackPos = C.INDEX_UNSET;
+            setCurrentTrack(pos);
         }
     }
 
