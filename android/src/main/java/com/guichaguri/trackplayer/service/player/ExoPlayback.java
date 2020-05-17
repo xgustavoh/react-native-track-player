@@ -88,7 +88,7 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
     public void add(Track track, int index) {
         boolean insert = true;
         for(int i=0; i < queue.size(); i++){
-            if(queue.get(i).id == track.id){
+            if(queue.get(i).id.equals(track.id)){
                 insert = false;
                 queue.set(i, track);
 
@@ -115,9 +115,11 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      */
     public void add(Collection<Track> tracks, int index) {
         for(Track t : tracks) {
+            Log.d(Utils.LOG, "Add tracks: "+tracks.size()+ ", Track: "+t.id);
             boolean insert = true;
             for(int i=0; i < queue.size(); i++){
-                if(queue.get(i).id == t.id){
+                Log.d(Utils.LOG, "->"+queue.get(i).id+ " == "+t.id+"? "+queue.get(i).id.equals(t.id));
+                if(queue.get(i).id.equals(t.id)){
                     insert = false;
                     queue.set(i, t);
 
@@ -130,12 +132,12 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
             if(insert) {
                 queue.add(index++, t);
+                if(currentTrack != null) {
+                    currentTrackPos = queue.indexOf(currentTrack);
+                }
             }
         }
 
-        if(currentTrack != null) {
-            currentTrackPos = queue.indexOf(currentTrack);
-        }
     }
 
     /**
@@ -150,7 +152,6 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
             int index = indexes.get(i);
             if (queue.get(i) == currentTrack) {
                 currentTrack = null;
-                // Stop de Track!
             }
             queue.remove(index);
         }

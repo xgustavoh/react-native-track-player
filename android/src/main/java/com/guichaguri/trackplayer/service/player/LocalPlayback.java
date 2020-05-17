@@ -105,7 +105,7 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
         super.setCurrentTrack(pos);
         
         Track t = getTrack(pos);
-        if(pos != C.INDEX_UNSET && t != null) {
+        if(pos != C.INDEX_UNSET && t != null && player.getPlayWhenReady()) {
             player.seekTo(0, 0);
             player.prepare(t.toMediaSource(context, this));
         } else {
