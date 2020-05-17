@@ -263,8 +263,6 @@ public class MusicManager implements OnAudioFocusChangeListener {
                 break;
         }
 
-        Log.d(Utils.LOG, "Focus: " + focus +" | Paused? "+paused+", onDuck? "+ducking+", wasDucking? "+wasDucking);
-
         if (ducking || (!alwaysPauseOnInterruption && paused)) {
             wasDucking = true;
             dVolume = playback.getVolume();

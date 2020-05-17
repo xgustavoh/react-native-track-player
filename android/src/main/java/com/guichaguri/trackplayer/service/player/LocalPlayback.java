@@ -102,6 +102,8 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             return;
         }
 
+        super.setCurrentTrack(pos);
+        
         Track t = getTrack(pos);
         if(pos != C.INDEX_UNSET && t != null) {
             player.seekTo(0, 0);
@@ -110,7 +112,6 @@ public class LocalPlayback extends ExoPlayback<SimpleExoPlayer> {
             player.stop(true);
         }
 
-        super.setCurrentTrack(pos);
     }
 
     /**
