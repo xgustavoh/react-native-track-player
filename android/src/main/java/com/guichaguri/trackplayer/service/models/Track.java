@@ -310,4 +310,39 @@ public class Track {
 
         return false;
     }
+
+    public boolean updated(Track t) {
+        if(contentType == null && t.contentType != null) {
+            return true;
+        } else if(contentType != null) {
+            if(t.contentType == null) return true;
+            else if(!contentType.equals(t.contentType)) return true;
+        }
+
+        if(userAgent == null && t.userAgent != null) {
+            return true;
+        } else if(userAgent != null) {
+            if(t.userAgent == null) return true;
+            else if(!userAgent.equals(t.userAgent)) return true;
+        }
+
+        if(t.resourceId == 0 && !uri.equals(t.uri)) {
+            return true;
+        } else if(t.resourceId != 0 && t.resourceId != resourceId) {
+            return true;
+        }
+
+        if(type != t.type) {
+            return true;
+        }
+
+        if(headers == null && t.headers != null) {
+            return true;
+        } else if(headers != null) {
+            if(t.headers == null) return true;
+            else if(!equalsHeaders(t.headers)) return true;
+        }
+
+        return false;
+    }
 }

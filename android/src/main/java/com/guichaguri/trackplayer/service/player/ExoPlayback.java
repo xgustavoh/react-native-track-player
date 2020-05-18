@@ -90,21 +90,26 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
         for(int i=0; i < queue.size(); i++){
             if(queue.get(i).id.equals(track.id)){
                 insert = false;
+                boolean forceUpdate = queue.get(i).updated(track);
                 queue.set(i, track);
 
                 if(currentTrackPos == i) {
-                    currentTrackPos = C.INDEX_UNSET;
-                    setCurrentTrack(i);
+                    if(forceUpdate) {
+                        currentTrackPos = C.INDEX_UNSET;
+                        setCurrentTrack(i);
+                    } else {
+                        currentTrack = track;
+                        currentTrackPos = queue.indexOf(track);
+                    }
                 }
             }
         }
 
         if(insert) {
             queue.add(index, track);
-        }
-
-        if(currentTrack != null) {
-            currentTrackPos = queue.indexOf(currentTrack);
+            if(currentTrack != null) {
+                currentTrackPos = queue.indexOf(currentTrack);
+            }
         }
     }
 
@@ -121,11 +126,17 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
                 Log.d(Utils.LOG, "->"+queue.get(i).id+ " == "+t.id+"? "+queue.get(i).id.equals(t.id));
                 if(queue.get(i).id.equals(t.id)){
                     insert = false;
+                    boolean forceUpdate = queue.get(i).updated(t);
                     queue.set(i, t);
 
                     if(currentTrackPos == i) {
-                        currentTrackPos = C.INDEX_UNSET;
-                        setCurrentTrack(i);
+                        if(forceUpdate) {
+                            currentTrackPos = C.INDEX_UNSET;
+                            setCurrentTrack(i);
+                        } else {
+                            currentTrack = t;
+                            currentTrackPos = queue.indexOf(t);
+                        }
                     }
                 }
             }
