@@ -120,10 +120,8 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
      */
     public void add(Collection<Track> tracks, int index) {
         for(Track t : tracks) {
-            Log.d(Utils.LOG, "Add tracks: "+tracks.size()+ ", Track: "+t.id);
             boolean insert = true;
             for(int i=0; i < queue.size(); i++){
-                Log.d(Utils.LOG, "->"+queue.get(i).id+ " == "+t.id+"? "+queue.get(i).id.equals(t.id));
                 if(queue.get(i).id.equals(t.id)){
                     insert = false;
                     boolean forceUpdate = queue.get(i).updated(t);

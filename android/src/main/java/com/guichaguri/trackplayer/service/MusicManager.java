@@ -136,6 +136,12 @@ public class MusicManager implements OnAudioFocusChangeListener {
         if(playback.isRemote()) {
             requestFocus();
 
+            if(hasAudioFocus && wasDucking) {
+                wasDucking = false;
+                playback.setVolumeMultiplier(dVolumeMultiplier);
+                playback.setVolume(dVolume);
+            }
+
             if(!receivingNoisyEvents) {
                 receivingNoisyEvents = true;
                 service.registerReceiver(noisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
@@ -240,16 +246,17 @@ public class MusicManager implements OnAudioFocusChangeListener {
 
     @Override
     public void onAudioFocusChange(int focus) {
-        Log.d(Utils.LOG, "onDuck");
-
         boolean paused = false;
         boolean ducking = false;
         boolean permanent = false;
-
         switch(focus) {
             case AudioManager.AUDIOFOCUS_LOSS:
                 permanent = true;
-                abandonFocus();
+                service.handler.postDelayed(() -> {
+                    if(wasDucking && playback != null) {
+                        playback.stop();
+                    }
+                }, 30000);
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                 paused = true;
@@ -263,7 +270,9 @@ public class MusicManager implements OnAudioFocusChangeListener {
                 break;
         }
 
-        if (ducking || (!alwaysPauseOnInterruption && paused)) {
+        Log.d(Utils.LOG, "onDuck | paused: "+paused+", ducking: "+ducking+", permanent: "+permanent);
+
+        if ((ducking || (!alwaysPauseOnInterruption && paused)) && !wasDucking) {
             wasDucking = true;
             dVolume = playback.getVolume();
             dVolumeMultiplier = playback.getVolumeMultiplier();
